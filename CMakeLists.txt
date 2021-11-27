@@ -1,10 +1,11 @@
 set(libName sokol)
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.2)
 project(${libName})
+cmake_policy(SET CMP0079 NEW)
 
 # include(ExternalProject)
 
-set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+# seti(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
 
 # ExternalProject_Add(sokolrepo
 #     GIT_REPOSITORY https://github.com/floooh/sokol
@@ -19,9 +20,10 @@ FetchContent_Declare(
 )
 
 FetchContent_GetProperties(sokolrepo)
-# if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
-set(FETCHCONTENT_QUIET NO)
-FetchContent_Populate(sokolrepo)
+if (NOT sokolrepo_POPULATED)    
+    set(FETCHCONTENT_QUIET NO)
+    FetchContent_Populate(sokolrepo)
+endif()
 
 
 # set(repoDir ${EXTERNAL_INSTALL_LOCATION})
@@ -41,10 +43,17 @@ set(SOKOL_HEADERS
     ${repoDir}/sokol_audio.h
     ${repoDir}/sokol_time.h
     ${repoDir}/sokol_glue.h
-				# ${repoDir}/sokol.c
+		./sokol.c
 )
-add_library(sokol STATIC ${SOKOL_HEADERS})
-# add_dependencies(sokol sokolrepo)
+
+if (NOT TARGET sokol)
+    # add_subdirectory("${CMAKE_SOURCE_DIR}/common/libplugin")
+    add_library(sokol STATIC ./sokol.c ${SOKOL_HEADERS})
+endif()
+
+
+
+# target_sources(sokol PUBLIC ${SOKOL_HEADERS})# add_dependencies(sokol sokolrepo)
 if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
     # compile sokol.c as Objective-C
     target_compile_options(sokol PRIVATE -x objective-c)
@@ -61,9 +70,9 @@ else()
     endif()
 endif()
 # target_include_directories(sokol INTERFACE ../sokol)
-target_include_directories(sokol INTERFACE ${EXTERNAL_INSTALL_LOCATION})
-
-
+# target_include_directories(sokol INTERFACE ${EXTERNAL_INSTALL_LOCATION})
+target_include_directories(sokol PUBLIC ${repoDir} ${repoDir}/util)
+# target_include_directories(sokol INTERFACE ${repoDir})
 
 
 
